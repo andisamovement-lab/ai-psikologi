@@ -35,7 +35,7 @@ async function sendMessage() {
 
     try {
         // Panggil API backend (fungsi & keamanan tetap sama)
-        const response = await fetch('https://ai-psikologi-backend.vercel.app/', {
+        const response = await fetch('missing-cassi-andisamovement-5ff92214.koyeb.app/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message })
