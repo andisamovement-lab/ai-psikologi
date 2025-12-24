@@ -1,4 +1,11 @@
+// ===============================
+// CONFIG
+// ===============================
+const API_URL = "https://missing-cassi-andisamovement-5ff92214.koyeb.app/chat";
+
+// ===============================
 // Kirim dengan Enter (tanpa Shift)
+// ===============================
 document.getElementById('msg').addEventListener('keypress', function (e) {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -20,7 +27,9 @@ async function sendMessage() {
     const loader = document.querySelector('.btn-loader');
     if (loader) loader.style.display = 'block';
 
-    // Tambah pesan user
+    // ===============================
+    // Tampilkan pesan user
+    // ===============================
     const userMsg = document.createElement('div');
     userMsg.className = 'message user-message';
     userMsg.innerHTML = `
@@ -33,59 +42,80 @@ async function sendMessage() {
     msgInput.value = '';
     scrollToBottom();
 
+    let aiReply = "Maaf, sistem sedang sibuk. Silakan coba lagi nanti.";
+
     try {
-        // Panggil API backend (fungsi & keamanan tetap sama)
-        const response = await fetch('missing-cassi-andisamovement-5ff92214.koyeb.app/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+        // ===============================
+        // Panggil backend Koyeb (FastAPI)
+        // ===============================
+        const response = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
             body: JSON.stringify({ message })
         });
 
+        // Jika backend hidup tapi error (500, 502, dll)
+        if (!response.ok) {
+            throw new Error("Backend error");
+        }
+
         const data = await response.json();
 
-        // Pesan AI + typing dots
-        const aiMsg = document.createElement('div');
-        aiMsg.className = 'message ai-message';
-        aiMsg.innerHTML = `
-            <div class="ai-avatar">🤖</div>
-            <div class="message-content">
-                <div class="typing-dots" id="typing">
-                    <div></div><div></div><div></div>
-                </div>
-                <p id="ai-response" style="display:none;">
-                    ${escapeHtml(data.reply || 'Maaf, tidak dapat memproses.')}
-                </p>
-            </div>
-        `;
-        chatBox.appendChild(aiMsg);
-        scrollToBottom();
-
-        // Simulasi mengetik
-        setTimeout(() => {
-            const typingEl   = document.getElementById('typing');
-            const responseEl = document.getElementById('ai-response');
-            if (typingEl)   typingEl.style.display   = 'none';
-            if (responseEl) responseEl.style.display = 'block';
-            scrollToBottom();
-        }, 1200);
+        // ===============================
+        // Fallback response handling
+        // ===============================
+        if (data && typeof data.reply === "string" && data.reply.trim() !== "") {
+            aiReply = data.reply;
+        } else if (data && data.error) {
+            aiReply = "⚠️ " + data.error;
+        } else {
+            aiReply = "Maaf, AI belum dapat memberikan jawaban saat ini.";
+        }
 
     } catch (error) {
-        const errorMsg = document.createElement('div');
-        errorMsg.className = 'message ai-message';
-        errorMsg.innerHTML = `
-            <div class="ai-avatar">⚠️</div>
-            <div class="message-content">
-                <p>Terjadi kesalahan koneksi. Silakan coba lagi.</p>
-            </div>
-        `;
-        chatBox.appendChild(errorMsg);
-        scrollToBottom();
-    } finally {
-        msgInput.disabled = false;
-        sendBtn.disabled  = false;
-        if (loader) loader.style.display = 'none';
-        msgInput.focus();
+        // ===============================
+        // Fallback total (koneksi / network)
+        // ===============================
+        aiReply = "⚠️ Terjadi gangguan koneksi ke server AI. Silakan coba beberapa saat lagi.";
     }
+
+    // ===============================
+    // Tampilkan pesan AI + typing effect
+    // ===============================
+    const aiMsg = document.createElement('div');
+    aiMsg.className = 'message ai-message';
+    aiMsg.innerHTML = `
+        <div class="ai-avatar">🤖</div>
+        <div class="message-content">
+            <div class="typing-dots" id="typing">
+                <div></div><div></div><div></div>
+            </div>
+            <p id="ai-response" style="display:none;">
+                ${escapeHtml(aiReply)}
+            </p>
+        </div>
+    `;
+    chatBox.appendChild(aiMsg);
+    scrollToBottom();
+
+    // Simulasi AI mengetik
+    setTimeout(() => {
+        const typingEl   = document.getElementById('typing');
+        const responseEl = document.getElementById('ai-response');
+        if (typingEl)   typingEl.style.display   = 'none';
+        if (responseEl) responseEl.style.display = 'block';
+        scrollToBottom();
+    }, 1200);
+
+    // ===============================
+    // Restore UI
+    // ===============================
+    msgInput.disabled = false;
+    sendBtn.disabled  = false;
+    if (loader) loader.style.display = 'none';
+    msgInput.focus();
 }
 
 function scrollToBottom() {
