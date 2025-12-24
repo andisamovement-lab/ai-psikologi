@@ -35,7 +35,7 @@ async function sendMessage() {
 
     try {
         // Panggil API backend (fungsi & keamanan tetap sama)
-        const response = await fetch('missing-cassi-andisamovement-5ff92214.koyeb.app/chat', {
+        const response = await fetch('missing-cassi-andisamovement-5ff92214.koyeb.app/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message })
