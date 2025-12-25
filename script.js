@@ -1,6 +1,8 @@
-const API_URL = "https://missing-cassi-andisamovement-5ff92214.koyeb.app/chat";
+/* ==== CONFIG ==== */
+const API_URL = "missing-cassi-andisamovement-5ff92214.koyeb.app/chat";   // ganti dengan sub‑domain
+let msgCounter = 0;
 
-// Kirim dengan Enter
+/* ==== ENTER KEY ==== */
 document.getElementById("msg").addEventListener("keypress", function (e) {
     if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
@@ -8,12 +10,14 @@ document.getElementById("msg").addEventListener("keypress", function (e) {
     }
 });
 
+/* ==== SEND MESSAGE ==== */
 async function sendMessage() {
     const msgInput = document.getElementById("msg");
-    const chatBox = document.getElementById("chatBox");
+    const chatBox  = document.getElementById("chatBox");
     const text = msgInput.value.trim();
     if (!text) return;
 
+    /* USER MESSAGE */
     chatBox.innerHTML += `
         <div class="message user-message">
             <div class="user-avatar">👤</div>
@@ -23,7 +27,8 @@ async function sendMessage() {
     msgInput.value = "";
     chatBox.scrollTop = chatBox.scrollHeight;
 
-    const thinkingId = "thinking-" + Date.now();
+    /* THINKING PLACEHOLDER */
+    const thinkingId = `thinking-${msgCounter++}`;
     chatBox.innerHTML += `
         <div class="message ai-message" id="${thinkingId}">
             <div class="ai-avatar">🤖</div>
@@ -35,10 +40,17 @@ async function sendMessage() {
     try {
         const response = await fetch(API_URL, {
             method: "POST",
-            headers: {"Content-Type": "application/json"},
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ message: text })
         });
+
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`Server error ${response.status}: ${errText}`);
+        }
+
         const data = await response.json();
+
         document.getElementById(thinkingId).innerHTML = `
             <div class="ai-avatar">🤍</div>
             <div class="message-content">${escapeHtml(data.reply)}</div>
@@ -47,7 +59,7 @@ async function sendMessage() {
         document.getElementById(thinkingId).innerHTML = `
             <div class="ai-avatar">⚠️</div>
             <div class="message-content">
-                Terjadi gangguan koneksi ke server AI. Silakan coba lagi.
+                ${escapeHtml(e.message || "Terjadi gangguan koneksi ke server AI. Silakan coba lagi.")}
             </div>
         `;
     }
@@ -56,6 +68,7 @@ async function sendMessage() {
     msgInput.focus();
 }
 
+/* ==== HTML ESCAPE ==== */
 function escapeHtml(text) {
     const map = {
         "&": "&amp;",
