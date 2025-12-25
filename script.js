@@ -1,5 +1,5 @@
 /* ==== CONFIG ==== */
-const API_URL = "https://missing-cassi-andisamovement-5ff92214.koyeb.app/chat";   // ganti dengan sub‑domain
+const API_URL = "https://tralala.koyeb.app//chat";   // ganti dengan sub‑domain
 let msgCounter = 0;
 
 /* ==== ENTER KEY ==== */
